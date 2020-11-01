@@ -1,0 +1,18 @@
+{
+  "weather": [
+    {
+      "timestamp": "1485705600",
+      "temperature": 288.15,
+      "humidity": 85,
+      "temperatureMax": 289.16,
+      "temperatureMin": 280.16
+    }, {
+      "timestamp": "1485705700",
+      "temperature": 288.15,
+      "humidity": 85,
+      "temperatureMax": 289.16,
+      "temperatureMin": 280.16
+    },
+    ...
+  ]
+}
