@@ -1,9 +1,13 @@
 package com.test.fields.service;
 
 import com.test.fields.TestUtil;
-import com.test.fields.agromonitoring.AmFieldMapper;
+import com.test.fields.agromonitoring.AmModelMapper;
 import com.test.fields.agromonitoring.PolygonApiClient;
+import com.test.fields.agromonitoring.WeatherApiClient;
 import com.test.fields.agromonitoring.model.AmField;
+import com.test.fields.agromonitoring.model.AmFieldWeather;
+import com.test.fields.agromonitoring.model.AmWeather;
+import com.test.fields.api.model.FieldWeather;
 import com.test.fields.exceptions.NotFoundException;
 import com.test.fields.model.Field;
 import com.test.fields.persistence.FieldRepository;
@@ -16,12 +20,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.verify;
@@ -33,15 +41,17 @@ class FieldServiceTest {
     @InjectMocks
     private FieldService fieldService;
     @Mock
-    private AmFieldMapper amFieldMapper;
+    private AmModelMapper amModelMapper;
     @Mock
     private FieldRepository fieldRepository;
     @Mock
     private PolygonApiClient polygonApiClient;
+    @Mock
+    private WeatherApiClient weatherApiClient;
 
     @Test
     void testCreateNewField() {
-        when(amFieldMapper.toAmField(any(Field.class))).thenCallRealMethod();
+        when(amModelMapper.toAmField(any(Field.class))).thenCallRealMethod();
         when(polygonApiClient.createPolygon(any(AmField.class))).thenReturn(new AmField("abc"));
 
         Field field = TestUtil.getResource("sampledata/field.json", Field.class);
@@ -75,7 +85,7 @@ class FieldServiceTest {
 
     @Test
     void testUpdateField() {
-        when(amFieldMapper.toAmField(any(Field.class))).thenCallRealMethod();
+        when(amModelMapper.toAmField(any(Field.class))).thenCallRealMethod();
 
         Field field = TestUtil.getResource("sampledata/field.json", Field.class);
         Field returnField = TestUtil.getResource("sampledata/field.json", Field.class);
@@ -91,7 +101,7 @@ class FieldServiceTest {
 
     @Test
     void testCreateOrUpdateField() {
-        when(amFieldMapper.toAmField(any(Field.class))).thenCallRealMethod();
+        when(amModelMapper.toAmField(any(Field.class))).thenCallRealMethod();
         when(polygonApiClient.createPolygon(any(AmField.class))).thenReturn(new AmField("abc"));
 
         Field field = TestUtil.getResource("sampledata/field.json", Field.class);
@@ -133,6 +143,28 @@ class FieldServiceTest {
 
         assertEquals(0, pageableCaptor.getValue().getPageNumber());
         assertEquals(10, pageableCaptor.getValue().getPageSize());
+    }
+
+    @Test
+    void testGetFieldWeather() {
+        when(amModelMapper.toFieldWeather(any(AmFieldWeather.class))).thenCallRealMethod();
+
+        UUID fieldId = UUID.fromString("a0f63e74-d7ef-4924-acb3-0e770ae9ec98");
+        Field field = TestUtil.getResource("sampledata/field.json", Field.class);
+        field.setPolygonId("abc");
+        when(fieldRepository.findById(fieldId)).thenReturn(Optional.of(field));
+
+        AmWeather amWeather = TestUtil.getResource("agromonitoring/weather/weather.json", AmWeather.class);
+        AmFieldWeather weather = new AmFieldWeather();
+        weather.add(amWeather);
+        when(weatherApiClient.getPolygonWeather(eq("abc"), anyLong(), anyLong()))
+                .thenReturn(weather);
+
+        FieldWeather fieldWeather = fieldService.getFieldWeather(fieldId);
+
+        // TODO we can verify for last 7 days by using an interface to provide time but I am running out of time now!!
+        verify(weatherApiClient).getPolygonWeather(eq("abc"), anyLong(), anyLong());
+        assertEquals(1485702000, fieldWeather.getWeather().get(0).getTimestamp());
     }
 
 }

@@ -1,8 +1,11 @@
 package com.test.fields.service;
 
-import com.test.fields.agromonitoring.AmFieldMapper;
+import com.test.fields.agromonitoring.AmModelMapper;
 import com.test.fields.agromonitoring.PolygonApiClient;
+import com.test.fields.agromonitoring.WeatherApiClient;
 import com.test.fields.agromonitoring.model.AmField;
+import com.test.fields.agromonitoring.model.AmFieldWeather;
+import com.test.fields.api.model.FieldWeather;
 import com.test.fields.exceptions.NotFoundException;
 import com.test.fields.model.Field;
 import com.test.fields.persistence.FieldRepository;
@@ -11,6 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -21,12 +26,15 @@ public class FieldService {
 
     private final FieldRepository fieldRepository;
     private final PolygonApiClient polygonApiClient;
-    private final AmFieldMapper amFieldMapper;
+    private final WeatherApiClient weatherApiClient;
+    private final AmModelMapper amModelMapper;
 
-    public FieldService(FieldRepository fieldRepository, PolygonApiClient polygonApiClient, AmFieldMapper amFieldMapper) {
+    public FieldService(FieldRepository fieldRepository, PolygonApiClient polygonApiClient, WeatherApiClient weatherApiClient,
+                        AmModelMapper amModelMapper) {
         this.fieldRepository = fieldRepository;
         this.polygonApiClient = polygonApiClient;
-        this.amFieldMapper = amFieldMapper;
+        this.weatherApiClient = weatherApiClient;
+        this.amModelMapper = amModelMapper;
     }
 
     @Transactional
@@ -39,7 +47,7 @@ public class FieldService {
         field.setCreated(created);
         field.getBoundaries().setCreated(created);
 
-        AmField polygon = polygonApiClient.createPolygon(amFieldMapper.toAmField(field));
+        AmField polygon = polygonApiClient.createPolygon(amModelMapper.toAmField(field));
         field.setPolygonId(polygon.getId());
 
         return fieldRepository.save(field);
@@ -70,7 +78,7 @@ public class FieldService {
         fieldToUpdate.setUpdated(updated);
         fieldToUpdate.getBoundaries().setUpdated(updated);
 
-        polygonApiClient.updatePolygon(fieldToUpdate.getPolygonId(), amFieldMapper.toAmField(fieldToUpdate));
+        polygonApiClient.updatePolygon(fieldToUpdate.getPolygonId(), amModelMapper.toAmField(fieldToUpdate));
         return fieldRepository.save(fieldToUpdate);
     }
 
@@ -82,5 +90,22 @@ public class FieldService {
     public List<Field> getFieldsByPageAndSize(Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page, size);
         return fieldRepository.findAllBy(pageable);
+    }
+
+    /*
+    This method assumes that weather is requested for last 7 days
+     */
+    public FieldWeather getFieldWeather(UUID fieldId) {
+        Instant now = Instant.now();
+        Instant last7thDay = now.minus(Duration.ofDays(7));
+        long start = last7thDay.getEpochSecond();
+        long end = now.getEpochSecond();
+
+        Optional<Field> optionalField = fieldRepository.findById(fieldId);
+        Field field = optionalField.orElseThrow(() -> new NotFoundException("Field with id:[" + fieldId + "] not found."));
+
+        AmFieldWeather polygonWeather = weatherApiClient.getPolygonWeather(field.getPolygonId(), start, end);
+
+        return amModelMapper.toFieldWeather(polygonWeather);
     }
 }

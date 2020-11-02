@@ -1,5 +1,6 @@
 package com.test.fields.api;
 
+import com.test.fields.api.model.FieldWeather;
 import com.test.fields.model.Field;
 import com.test.fields.service.FieldService;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -47,6 +48,11 @@ public class FieldsController {
     public List<Field> getFieldsByPageAndSize(@RequestParam(value = "page", defaultValue = "0")Integer page,
                                               @RequestParam(value = "size", defaultValue = "20")Integer size) {
         return fieldService.getFieldsByPageAndSize(page, size);
+    }
+
+    @GetMapping(ApiEndpoint.FIELD_WEATHER)
+    public FieldWeather getFieldWeather(@PathVariable(ApiEndpoint.FIELD_ID)UUID fieldId) {
+        return fieldService.getFieldWeather(fieldId);
     }
 
 }
