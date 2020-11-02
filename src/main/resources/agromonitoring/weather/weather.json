@@ -1,0 +1,25 @@
+{
+  "dt": 1485702000,
+  "weather": [
+    {
+      "id": 801,
+      "main": "Clouds",
+      "description": "few clouds",
+      "icon": "02n"
+    }
+  ],
+  "main": {
+    "temp": 276.91,
+    "pressure": 1031,
+    "humidity": 81,
+    "temp_min": 274.15,
+    "temp_max": 280.15
+  },
+  "wind": {
+    "speed": 2,
+    "deg": 140
+  },
+  "clouds": {
+    "all": 20
+  }
+}
