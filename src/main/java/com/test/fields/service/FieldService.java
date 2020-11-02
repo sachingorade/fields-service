@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,6 +26,9 @@ public class FieldService {
         This is a create field method so we should always create a new field regardless of what id is set in the given data.
          */
         field.setId(null);
+        LocalDateTime created = LocalDateTime.now();
+        field.setCreated(created);
+        field.getBoundaries().setCreated(created);
         return fieldRepository.save(field);
     }
 
@@ -33,6 +37,15 @@ public class FieldService {
     }
 
     public Field createOrUpdateField(Field field) {
+        Optional<Field> optionalField = fieldRepository.findById(field.getId());
+        if (optionalField.isEmpty()) {
+            LocalDateTime created = LocalDateTime.now();
+            field.setCreated(created);
+            field.getBoundaries().setCreated(created);
+        }
+        LocalDateTime updated = LocalDateTime.now();
+        field.setUpdated(updated);
+        field.getBoundaries().setUpdated(updated);
         return fieldRepository.save(field);
     }
 

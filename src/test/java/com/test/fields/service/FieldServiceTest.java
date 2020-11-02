@@ -34,7 +34,7 @@ class FieldServiceTest {
 
     @Test
     void testCreateNewField() {
-        Field field = TestUtil.getResource("sampledata/field-metadata.json", Field.class);
+        Field field = TestUtil.getResource("sampledata/field.json", Field.class);
         fieldService.createField(field);
 
         assertNull(field.getId()); // Always create new field
@@ -43,7 +43,7 @@ class FieldServiceTest {
 
     @Test
     void testDeleteField() {
-        Field field = TestUtil.getResource("sampledata/field-metadata.json", Field.class);
+        Field field = TestUtil.getResource("sampledata/field.json", Field.class);
         fieldService.deleteField(field);
 
         verify(fieldRepository).delete(same(field));
@@ -51,7 +51,7 @@ class FieldServiceTest {
 
     @Test
     void testUpdateField() {
-        Field field = TestUtil.getResource("sampledata/field-metadata.json", Field.class);
+        Field field = TestUtil.getResource("sampledata/field.json", Field.class);
         fieldService.createOrUpdateField(field);
 
         verify(fieldRepository).save(same(field));
@@ -59,7 +59,7 @@ class FieldServiceTest {
 
     @Test
     void testGetFieldById() {
-        Field field = TestUtil.getResource("sampledata/field-metadata.json", Field.class);
+        Field field = TestUtil.getResource("sampledata/field.json", Field.class);
         when(fieldRepository.findById(any(UUID.class))).thenReturn(Optional.of(field));
 
         UUID fieldId = UUID.randomUUID();

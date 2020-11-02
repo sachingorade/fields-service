@@ -1,12 +1,11 @@
 package com.test.fields.model;
 
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-/*
-This class can be made abstract and we can add subtypes for the sake of simplicity we make it concrete for now.
- */
-public class GeoJson {
-    private final String type = "Feature";
-    private Map<String, String> properties;
-    private Geometry geometry;
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = GeoFeature.class, name = GeoFeature.TYPE)
+})
+public abstract class GeoJson {
 }

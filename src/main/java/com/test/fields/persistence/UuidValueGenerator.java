@@ -16,7 +16,9 @@ public class UuidValueGenerator extends AbstractMongoEventListener<Field> {
         Field source = event.getSource();
         if (source.getId() == null) {
             // As per Wikipedia, chance of generating duplicate UUID is very very low, so lets generate random UUID.
-            source.setId(UUID.randomUUID());
+            UUID uuid = UUID.randomUUID();
+            source.setId(uuid);
+            source.getBoundaries().setId(uuid);
         }
     }
 }

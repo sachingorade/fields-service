@@ -39,7 +39,7 @@ class FieldsControllerTest {
     void testCreateNewField() throws Exception {
         mockMvc.perform(post(ApiEndpoint.FIELDS)
             .contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(getContents("sampledata/field-metadata.json")))
+            .content(getContents("sampledata/field.json")))
                 .andExpect(status().isOk());
     }
 
@@ -58,7 +58,7 @@ class FieldsControllerTest {
     @Test
     void testGetFieldValid() throws Exception {
         UUID fieldId = UUID.fromString("a0f63e74-d7ef-4924-acb3-0e770ae9ec98");
-        Field field = getResource("sampledata/field-metadata.json", Field.class);
+        Field field = getResource("sampledata/field.json", Field.class);
         when(fieldRepository.findById(fieldId)).thenReturn(Optional.of(field));
 
         mockMvc.perform(get(ApiEndpoint.FIELDS_WITH_FIELD_ID, fieldId.toString()))
@@ -79,7 +79,7 @@ class FieldsControllerTest {
 
         mockMvc.perform(put(ApiEndpoint.FIELDS_WITH_FIELD_ID, fieldId.toString())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getContents("sampledata/field-metadata.json")))
+                .content(getContents("sampledata/field.json")))
                 .andExpect(status().isOk());
     }
 

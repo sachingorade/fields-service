@@ -15,6 +15,8 @@ public class Field {
     @Id
     private UUID id;
     private String name;
+
+    // TODO check ZonedDateTime usage..
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime created;
@@ -22,8 +24,7 @@ public class Field {
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime updated;
     private CountryCode countryCode;
-//    private Boundary boundaries;
-
+    private Boundary boundaries;
 
     public Field() {
     }
@@ -72,6 +73,14 @@ public class Field {
         this.countryCode = countryCode;
     }
 
+    public Boundary getBoundaries() {
+        return boundaries;
+    }
+
+    public void setBoundaries(Boundary boundaries) {
+        this.boundaries = boundaries;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -88,11 +97,12 @@ public class Field {
     @Override
     public String toString() {
         return "Field{" +
-                "id='" + id + '\'' +
+                "id=" + id +
                 ", name='" + name + '\'' +
                 ", created=" + created +
                 ", updated=" + updated +
                 ", countryCode=" + countryCode +
+                ", boundaries=" + boundaries +
                 '}';
     }
 }
