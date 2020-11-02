@@ -1,6 +1,9 @@
 package com.test.fields.service;
 
 import com.test.fields.TestUtil;
+import com.test.fields.agromonitoring.AmFieldMapper;
+import com.test.fields.agromonitoring.PolygonApiClient;
+import com.test.fields.agromonitoring.model.AmField;
 import com.test.fields.exceptions.NotFoundException;
 import com.test.fields.model.Field;
 import com.test.fields.persistence.FieldRepository;
@@ -13,13 +16,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 
-import javax.lang.model.util.Types;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,31 +33,78 @@ class FieldServiceTest {
     @InjectMocks
     private FieldService fieldService;
     @Mock
+    private AmFieldMapper amFieldMapper;
+    @Mock
     private FieldRepository fieldRepository;
+    @Mock
+    private PolygonApiClient polygonApiClient;
 
     @Test
     void testCreateNewField() {
+        when(amFieldMapper.toAmField(any(Field.class))).thenCallRealMethod();
+        when(polygonApiClient.createPolygon(any(AmField.class))).thenReturn(new AmField("abc"));
+
         Field field = TestUtil.getResource("sampledata/field.json", Field.class);
         fieldService.createField(field);
 
         assertNull(field.getId()); // Always create new field
+
+        // Create a polygon
+        ArgumentCaptor<AmField> amFieldCaptor = ArgumentCaptor.forClass(AmField.class);
+        verify(polygonApiClient).createPolygon(amFieldCaptor.capture());
+        assertEquals(field.getBoundaries().getGeoJson(), amFieldCaptor.getValue().getGeoJson());
+
         verify(fieldRepository).save(same(field));
+        // We must store the polygon id as we have to use it later
+        assertEquals("abc", field.getPolygonId());
     }
 
     @Test
     void testDeleteField() {
         Field field = TestUtil.getResource("sampledata/field.json", Field.class);
+        Field returnField = TestUtil.getResource("sampledata/field.json", Field.class);
+        returnField.setPolygonId("abc");
+
+        when(fieldRepository.findById(eq(field.getId()))).thenReturn(Optional.of(returnField));
+
         fieldService.deleteField(field);
 
-        verify(fieldRepository).delete(same(field));
+        verify(polygonApiClient).deletePolygon(eq(returnField.getPolygonId()));
+        verify(fieldRepository).delete(same(returnField));
     }
 
     @Test
     void testUpdateField() {
+        when(amFieldMapper.toAmField(any(Field.class))).thenCallRealMethod();
+
         Field field = TestUtil.getResource("sampledata/field.json", Field.class);
+        Field returnField = TestUtil.getResource("sampledata/field.json", Field.class);
+        returnField.setPolygonId("abc");
+        when(fieldRepository.findById(field.getId())).thenReturn(Optional.of(returnField));
+
         fieldService.createOrUpdateField(field);
 
+        ArgumentCaptor<AmField> amFieldCaptor = ArgumentCaptor.forClass(AmField.class);
+        verify(polygonApiClient).updatePolygon(eq(returnField.getPolygonId()), amFieldCaptor.capture());
+        verify(fieldRepository).save(same(returnField));
+    }
+
+    @Test
+    void testCreateOrUpdateField() {
+        when(amFieldMapper.toAmField(any(Field.class))).thenCallRealMethod();
+        when(polygonApiClient.createPolygon(any(AmField.class))).thenReturn(new AmField("abc"));
+
+        Field field = TestUtil.getResource("sampledata/field.json", Field.class);
+        when(fieldRepository.findById(field.getId())).thenReturn(Optional.empty());
+
+        fieldService.createOrUpdateField(field);
+
+        ArgumentCaptor<AmField> amFieldCaptor = ArgumentCaptor.forClass(AmField.class);
+        verify(polygonApiClient).createPolygon(amFieldCaptor.capture());
+        assertEquals(field.getBoundaries().getGeoJson(), amFieldCaptor.getValue().getGeoJson());
+
         verify(fieldRepository).save(same(field));
+        assertEquals("abc", field.getPolygonId());
     }
 
     @Test

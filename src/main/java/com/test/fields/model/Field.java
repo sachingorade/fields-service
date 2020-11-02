@@ -1,5 +1,6 @@
 package com.test.fields.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
@@ -25,6 +26,7 @@ public class Field {
     private LocalDateTime updated;
     private CountryCode countryCode;
     private Boundary boundaries;
+    private String polygonId;
 
     public Field() {
     }
@@ -79,6 +81,15 @@ public class Field {
 
     public void setBoundaries(Boundary boundaries) {
         this.boundaries = boundaries;
+    }
+
+    @JsonIgnore
+    public String getPolygonId() {
+        return polygonId;
+    }
+
+    public void setPolygonId(String polygonId) {
+        this.polygonId = polygonId;
     }
 
     @Override
