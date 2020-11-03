@@ -1,0 +1,19 @@
+version: "3.8"
+
+networks:
+  default:
+    external:
+      name: backend
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - 27017:27017
+  fields-service:
+    image: sachingorade/fields-service
+    container_name: fields-service
+    ports:
+      - 80:80
+    links:
+      - mongodb
